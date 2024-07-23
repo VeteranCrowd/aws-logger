@@ -1,1 +1,1 @@
-export { foo } from './foo';
+export { getLogger } from './getLogger';

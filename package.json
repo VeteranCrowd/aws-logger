@@ -1,17 +1,19 @@
 {
   "author": "Jason Williscroft",
-  "bin": {
-    "mycli": "./dist/mycli.cli.mjs"
-  },
   "bugs": {
-    "url": "https://github.com/karmaniverous/npm-package-template-ts/issues"
+    "url": "https://github.com/veterancrowd/aws-logger/issues"
   },
   "dependencies": {
+    "@karmaniverous/s3-streamlogger": "^1.10.1",
     "commander": "^12.1.0",
-    "tslog": "^4.9.3"
+    "is-what": "^5.0.2",
+    "tslog": "^4.9.3",
+    "winston": "^3.13.1",
+    "winston-transport": "^4.7.1"
   },
-  "description": "A feature-rich NPM package template for TypeScript projects.",
+  "description": "A Winston-based AWS logger providing an audit stream to a central log bucket.",
   "devDependencies": {
+    "@aws-sdk/client-sts": "^3.616.0",
     "@commander-js/extra-typings": "^12.1.0",
     "@eslint/js": "^9.7.0",
     "@rollup/plugin-alias": "^5.1.0",
@@ -20,6 +22,7 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
+    "@types/aws-lambda": "^8.10.141",
     "@types/chai": "^4.3.16",
     "@types/eslint__js": "^8.42.3",
     "@types/eslint-config-prettier": "^6.11.3",
@@ -56,18 +59,18 @@
     ".": {
       "import": {
         "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
+        "default": "./dist/mjs/index.js"
       },
       "require": {
         "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
+        "default": "./dist/cjs/index.js"
       }
     }
   },
   "files": [
     "dist"
   ],
-  "homepage": "https://github.com/karmaniverous/npm-package-template-ts#readme",
+  "homepage": "https://github.com/veterancrowd/aws-logger#readme",
   "keywords": [
     "chai",
     "eslint",
@@ -81,9 +84,9 @@
     "typescript"
   ],
   "license": "BSD-3-Clause",
-  "main": "dist/index.cjs",
-  "module": "dist/index.mjs",
-  "name": "@karmaniverous/npm-package-template-ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/mjs/index.js",
+  "name": "@veterancrowd/aws-logger",
   "publishConfig": {
     "access": "public"
   },
@@ -114,7 +117,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/karmaniverous/npm-package-template-ts.git"
+    "url": "git+https://github.com/veterancrowd/aws-logger.git"
   },
   "scripts": {
     "build": "rimraf dist && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",

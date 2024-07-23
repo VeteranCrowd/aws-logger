@@ -1,3 +1,4 @@
+import { type S3StreamLoggerOptions } from '@karmaniverous/s3-streamlogger';
 import { type APIGatewayProxyEvent, type Context } from 'aws-lambda';
 import winston from 'winston';
 
@@ -27,15 +28,20 @@ const ignoreLevels = (levels: string | string[]) => {
   )();
 };
 
-interface GetLoggerParams {
-  bucket: string | undefined;
+interface GetLoggerParams extends S3StreamLoggerOptions {
   logLevel: string | undefined;
   roleArn: string | undefined;
   roleSessionName: string | undefined;
 }
 
 export const getLogger = async (
-  { bucket, logLevel, roleArn, roleSessionName }: GetLoggerParams,
+  {
+    bucket,
+    logLevel,
+    roleArn,
+    roleSessionName,
+    ...s3StreamLoggerOptions
+  }: GetLoggerParams,
   event: APIGatewayProxyEvent,
   context: Context,
 ) => {
@@ -44,7 +50,7 @@ export const getLogger = async (
   if (bucket && roleArn && roleSessionName)
     try {
       s3StreamTransport = new S3StreamTransport(
-        { bucket },
+        { bucket, ...s3StreamLoggerOptions },
         {
           format: winston.format.combine(
             winston.format.timestamp(),

@@ -28,10 +28,10 @@ const ignoreLevels = (levels: string | string[]) => {
 };
 
 interface GetLoggerParams {
-  bucket: string;
+  bucket: string | undefined;
   logLevel: string | undefined;
-  roleArn: string;
-  roleSessionName: string;
+  roleArn: string | undefined;
+  roleSessionName: string | undefined;
 }
 
 export const getLogger = async (
@@ -39,31 +39,48 @@ export const getLogger = async (
   event: APIGatewayProxyEvent,
   context: Context,
 ) => {
-  const s3StreamTransport = new S3StreamTransport(
-    { bucket },
-    {
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format((info) => ({
-          ...info,
-          event: diminish(
-            omit(event as unknown as Pickable, [
-              'multiValueHeaders',
-              'rawHeaders',
-              'rawMultiValueHeaders',
-            ]),
-          ),
-          context: diminish(context),
-        }))(),
-      ),
-      level: 'audit',
-    },
-  );
+  let s3StreamTransport;
 
-  await s3StreamTransport.assumeRole({
-    RoleArn: roleArn,
-    RoleSessionName: roleSessionName,
-  });
+  if (bucket && roleArn && roleSessionName)
+    try {
+      s3StreamTransport = new S3StreamTransport(
+        { bucket },
+        {
+          format: winston.format.combine(
+            winston.format.timestamp(),
+            winston.format((info) => ({
+              ...info,
+              event: diminish(
+                omit(event as unknown as Pickable, [
+                  'multiValueHeaders',
+                  'rawHeaders',
+                  'rawMultiValueHeaders',
+                ]),
+              ),
+              context: diminish(context),
+            }))(),
+          ),
+          level: 'audit',
+        },
+      );
+
+      await s3StreamTransport.assumeRole({
+        RoleArn: roleArn,
+        RoleSessionName: roleSessionName,
+      });
+    } catch (error) {
+      console.error('Error while activating S3 log transport.', error);
+      s3StreamTransport = undefined;
+    }
+  else
+    console.warn(
+      'Missing required info, unable to activate S3 log transport.',
+      {
+        bucket,
+        roleArn,
+        roleSessionName,
+      },
+    );
 
   return winston.createLogger({
     level: logLevel ?? 'info',
@@ -76,7 +93,7 @@ export const getLogger = async (
           winston.format.json(),
         ),
       }),
-      s3StreamTransport,
+      ...(s3StreamTransport ? [s3StreamTransport] : []),
     ],
   });
 };

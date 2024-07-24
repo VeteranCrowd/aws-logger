@@ -64,6 +64,7 @@ export const getLogger = async (
                 ]),
               ),
               context: diminish(context),
+              env: diminish(process.env),
             }))(),
           ),
           level: 'audit',

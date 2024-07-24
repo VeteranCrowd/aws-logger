@@ -1,10 +1,12 @@
-import { type S3StreamLoggerOptions } from '@karmaniverous/s3-streamlogger';
+import {
+  type S3StreamLoggerOptions,
+  S3StreamTransport,
+} from '@karmaniverous/s3-streamlogger';
 import { type APIGatewayProxyEvent, type Context } from 'aws-lambda';
 import winston from 'winston';
 
 import { diminish } from './diminish';
 import { omit, type Pickable } from './lo';
-import { S3StreamTransport } from './S3StreamTransport';
 
 // Define log levels.
 const logLevels = {
@@ -39,7 +41,7 @@ export const getLogger = async (
     bucket,
     logLevel,
     roleArn,
-    roleSessionName,
+    roleSessionName = 'default',
     ...s3StreamLoggerOptions
   }: GetLoggerParams,
   event: APIGatewayProxyEvent,
@@ -71,10 +73,11 @@ export const getLogger = async (
         },
       );
 
-      await s3StreamTransport.assumeRole({
-        RoleArn: roleArn,
-        RoleSessionName: roleSessionName,
-      });
+      if (roleArn && roleSessionName)
+        await s3StreamTransport.assumeRole({
+          RoleArn: roleArn,
+          RoleSessionName: roleSessionName,
+        });
     } catch (error) {
       console.error('Error while activating S3 log transport.', error);
       s3StreamTransport = undefined;

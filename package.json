@@ -4,7 +4,7 @@
     "url": "https://github.com/veterancrowd/aws-logger/issues"
   },
   "dependencies": {
-    "@karmaniverous/s3-streamlogger": "^1.11.0",
+    "@karmaniverous/s3-streamlogger": "^1.11.1",
     "is-what": "^5.0.2",
     "winston": "^3.13.1"
   },

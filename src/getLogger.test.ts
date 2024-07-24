@@ -18,4 +18,19 @@ describe('getLogger', function () {
       );
     }).not.to.throw();
   });
+
+  it('should log', async function () {
+    const logger = await getLogger(
+      {
+        bucket: 'foo',
+        logLevel: 'debug',
+      },
+      {} as APIGatewayProxyEvent,
+      {} as Context,
+    );
+
+    expect(() => {
+      logger.info('foo');
+    }).not.to.throw();
+  });
 });

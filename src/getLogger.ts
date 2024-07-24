@@ -31,9 +31,9 @@ const ignoreLevels = (levels: string | string[]) => {
 };
 
 interface GetLoggerParams extends S3StreamLoggerOptions {
-  logLevel: string | undefined;
-  roleArn: string | undefined;
-  roleSessionName: string | undefined;
+  logLevel?: string;
+  roleArn?: string;
+  roleSessionName?: string;
 }
 
 export const getLogger = async (

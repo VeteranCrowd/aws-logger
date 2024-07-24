@@ -47,7 +47,7 @@ export const getLogger = async (
 ) => {
   let s3StreamTransport;
 
-  if (bucket && roleArn && roleSessionName)
+  if (bucket)
     try {
       s3StreamTransport = new S3StreamTransport(
         { bucket, ...s3StreamLoggerOptions },
@@ -80,12 +80,7 @@ export const getLogger = async (
     }
   else
     console.warn(
-      'Missing required info, unable to activate S3 log transport.',
-      {
-        bucket,
-        roleArn,
-        roleSessionName,
-      },
+      'No target bucket configured, unable to activate S3 log transport!',
     );
 
   return winston.createLogger({

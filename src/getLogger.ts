@@ -1,12 +1,7 @@
-import {
-  type S3StreamLoggerOptions,
-  S3StreamTransport,
-} from '@karmaniverous/s3-streamlogger';
 import { type APIGatewayProxyEvent, type Context } from 'aws-lambda';
 import winston from 'winston';
 
-import { diminish } from './diminish';
-import { omit, type Pickable } from './lo';
+import { condense, omit } from './lo';
 
 // Define log levels.
 const logLevels = {
@@ -30,75 +25,43 @@ const ignoreLevels = (levels: string | string[]) => {
   )();
 };
 
-interface GetLoggerParams extends S3StreamLoggerOptions {
-  logLevel?: string;
-  roleArn?: string;
-  roleSessionName?: string;
-}
-
-export const getLogger = async (
-  {
-    bucket,
-    logLevel,
-    roleArn,
-    roleSessionName = 'default',
-    ...s3StreamLoggerOptions
-  }: GetLoggerParams,
-  event: APIGatewayProxyEvent,
-  context: Context,
-) => {
-  let s3StreamTransport;
-
-  if (bucket)
-    try {
-      s3StreamTransport = new S3StreamTransport(
-        { bucket, ...s3StreamLoggerOptions },
-        {
-          format: winston.format.combine(
-            winston.format.timestamp(),
-            winston.format((info) => ({
-              ...info,
-              event: diminish(
-                omit(event as unknown as Pickable, [
-                  'multiValueHeaders',
-                  'rawHeaders',
-                  'rawMultiValueHeaders',
-                ]),
-              ),
-              context: diminish(context),
-              env: diminish(process.env),
-            }))(),
-          ),
-          level: 'audit',
-        },
-      );
-
-      if (roleArn && roleSessionName)
-        await s3StreamTransport.assumeRole({
-          RoleArn: roleArn,
-          RoleSessionName: roleSessionName,
-        });
-    } catch (error) {
-      console.error('Error while activating S3 log transport.', error);
-      s3StreamTransport = undefined;
-    }
-  else
-    console.warn(
-      'No target bucket configured, unable to activate S3 log transport!',
-    );
-
-  return winston.createLogger({
-    level: logLevel ?? 'info',
+export const getLogger = (
+  level = process.env.LOG_LEVEL ?? 'info',
+  event?: APIGatewayProxyEvent,
+  context?: Context,
+) =>
+  winston.createLogger({
+    level,
     levels: logLevels,
     transports: [
       new winston.transports.Console({
         format: winston.format.combine(
+          winston.format.timestamp(),
+          winston.format(
+            (info) =>
+              condense({
+                ...info,
+                ...(event
+                  ? {
+                      event: omit(event, [
+                        'multiValueHeaders',
+                        'rawHeaders',
+                        'rawMultiValueHeaders',
+                      ]),
+                    }
+                  : {}),
+                ...(context ? { context } : {}),
+              }) as winston.Logform.TransformableInfo,
+          )(),
+        ),
+        level: 'audit',
+      }),
+      new winston.transports.Console({
+        format: winston.format.combine(
           ignoreLevels('audit'),
-          winston.format((info) => diminish(info) as typeof info)(),
+          winston.format((info) => condense(info) as typeof info)(),
           winston.format.json(),
         ),
       }),
-      ...(s3StreamTransport ? [s3StreamTransport] : []),
     ],
   });
-};

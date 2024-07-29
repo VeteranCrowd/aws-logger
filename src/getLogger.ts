@@ -1,7 +1,8 @@
 import { type APIGatewayProxyEvent, type Context } from 'aws-lambda';
+import { omit } from 'radash';
 import winston from 'winston';
 
-import { condense, omit } from './lo';
+import { condense } from './condense';
 
 // Define log levels.
 const logLevels = {
@@ -27,7 +28,10 @@ const ignoreLevels = (levels: string | string[]) => {
 
 export const getLogger = (
   level = process.env.LOG_LEVEL ?? 'info',
-  event?: APIGatewayProxyEvent,
+  event?: APIGatewayProxyEvent & {
+    rawHeaders: unknown;
+    rawMultiValueHeaders: unknown;
+  },
   context?: Context,
 ) =>
   winston.createLogger({

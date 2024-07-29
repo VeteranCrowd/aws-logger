@@ -5,6 +5,7 @@
   },
   "dependencies": {
     "is-what": "^5.0.2",
+    "radash": "^12.1.0",
     "winston": "^3.13.1"
   },
   "description": "A Winston-based AWS logger providing an audit stream to a central log bucket.",

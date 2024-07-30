@@ -100,3 +100,5 @@ export const getLogger = (
       }),
     ],
   }) as Logger;
+
+export const logger = getLogger();

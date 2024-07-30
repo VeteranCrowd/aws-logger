@@ -5,7 +5,7 @@ import winston from 'winston';
 import { condense } from './condense';
 
 // Define log levels.
-const logLevels = {
+const levels: winston.config.AbstractConfigSetLevels = {
   audit: 0,
   emergency: 1,
   alert: 2,
@@ -18,33 +18,66 @@ const logLevels = {
   trace: 9,
 };
 
+interface Logger extends winston.Logger {
+  audit: winston.LeveledLogMethod;
+  emergency: winston.LeveledLogMethod;
+  alert: winston.LeveledLogMethod;
+  critical: winston.LeveledLogMethod;
+  error: winston.LeveledLogMethod;
+  warning: winston.LeveledLogMethod;
+  notice: winston.LeveledLogMethod;
+  info: winston.LeveledLogMethod;
+  debug: winston.LeveledLogMethod;
+  trace: winston.LeveledLogMethod;
+}
+
 // Create a custom filter format to ignore a specific log level.
 const ignoreLevels = (levels: string | string[]) => {
   if (!Array.isArray(levels)) levels = [levels];
-  return winston.format((info) =>
-    levels.includes(info.level) ? false : info,
-  )();
+  return winston.format((info) => (levels.includes(info.level) ? false : info));
+};
+
+type Event = APIGatewayProxyEvent & {
+  rawHeaders?: unknown;
+  rawMultiValueHeaders?: unknown;
 };
 
 export const getLogger = (
   level = process.env.LOG_LEVEL ?? 'info',
-  event?: APIGatewayProxyEvent & {
-    rawHeaders: unknown;
-    rawMultiValueHeaders: unknown;
-  },
+  event?: Event,
   context?: Context,
 ) =>
   winston.createLogger({
     level,
-    levels: logLevels,
+    levels,
     transports: [
+      // Log everything except audit logs to the console.
       new winston.transports.Console({
         format: winston.format.combine(
-          winston.format.timestamp(),
-          winston.format(
-            (info) =>
-              condense({
-                ...info,
+          // Ignore audit logs.
+          ignoreLevels('audit')(),
+          // Collect all metadata under the 'meta' key.
+          winston.format.metadata({ key: 'meta' }),
+          // Condense all metadata.
+          winston.format(({ meta, ...info }) => ({
+            ...info,
+            meta: condense(meta),
+          }))(),
+          // Format JSON for console.
+          winston.format.json(),
+        ),
+      }),
+      // Log audit logs to the console with a special format.
+      new winston.transports.Console({
+        format: winston.format.combine(
+          // Collect all metadata under the 'meta' key.
+          winston.format.metadata({ key: 'meta' }),
+          // Add event & context to metadata & condense.
+          winston.format(({ meta, ...info }) => {
+            const x = {
+              ...info,
+              meta: condense({
+                ...meta,
                 ...(event
                   ? {
                       event: omit(event, [
@@ -55,17 +88,15 @@ export const getLogger = (
                     }
                   : {}),
                 ...(context ? { context } : {}),
-              }) as winston.Logform.TransformableInfo,
-          )(),
+              }),
+            };
+
+            return x;
+          })(),
+          // Format JSON for console.
+          winston.format.json(),
         ),
         level: 'audit',
       }),
-      new winston.transports.Console({
-        format: winston.format.combine(
-          ignoreLevels('audit'),
-          winston.format((info) => condense(info) as typeof info)(),
-          winston.format.json(),
-        ),
-      }),
     ],
-  });
+  }) as Logger;

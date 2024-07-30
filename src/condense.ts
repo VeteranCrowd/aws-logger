@@ -1,9 +1,9 @@
-import { isArray, isObject, isPrimitive, isString } from 'is-what';
+import { isArray, isObject, isPrimitive, isString, isSymbol } from 'is-what';
 import { inspect } from 'util';
 
 const condenseObject = (
-  value: Record<string, unknown>,
-  keys: string[],
+  value: Record<string | symbol, unknown>,
+  keys: (string | symbol)[],
   maxLen: number,
 ): Record<string, unknown> =>
   keys.reduce((a, k) => ({ ...a, [k]: condense(value[k], maxLen) }), {});
@@ -26,12 +26,13 @@ export const condense = (value: unknown, maxLen = 128): unknown => {
   if (isPrimitive(value)) return value;
 
   if (isObject(value)) {
-    const keys = Object.keys(value);
+    const keys = Reflect.ownKeys(value);
 
     return keys.length > maxLen
       ? {
           ...condenseObject(value, keys.slice(0, leftLength - 1), maxLen),
-          '...': '...',
+          [`${(isSymbol(keys[leftLength - 1]) ? keys[leftLength - 1].toString() : (keys[leftLength - 1] as string))[0]}...`]:
+            '...',
           ...condenseObject(value, keys.slice(-(rightLength - 2)), maxLen),
         }
       : condenseObject(value, keys, maxLen);

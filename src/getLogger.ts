@@ -18,7 +18,7 @@ const levels: winston.config.AbstractConfigSetLevels = {
   trace: 9,
 };
 
-interface Logger extends winston.Logger {
+export interface Logger extends winston.Logger {
   audit: winston.LeveledLogMethod;
   emergency: winston.LeveledLogMethod;
   alert: winston.LeveledLogMethod;

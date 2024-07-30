@@ -47,5 +47,8 @@ export const condense = (value: unknown, maxLen = 128): unknown => {
         ]
       : condenseArray(value, maxLen);
 
-  return inspect(value, false, 1);
+  return condense(
+    inspect(value, { compact: true, depth: 1, showHidden: false }),
+    maxLen,
+  );
 };

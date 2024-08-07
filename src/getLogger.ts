@@ -93,6 +93,8 @@ export const getLogger = (
 
             return x;
           })(),
+          // Format error objects.
+          winston.format.errors({ stack: true }),
           // Format JSON for console.
           winston.format.json(),
         ),

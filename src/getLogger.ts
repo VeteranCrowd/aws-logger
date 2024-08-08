@@ -51,17 +51,17 @@ export const getLogger = (
     level,
     levels,
     transports: [
-      // Log everything except audit logs to the console.
+      // Condense & log everything but audit & error logs to the console.
       new winston.transports.Console({
         format: winston.format.combine(
-          // Ignore audit logs.
-          ignoreLevels('audit')(),
+          // Ignore audit & error logs.
+          ignoreLevels(['audit'])(),
           // Collect all metadata under the 'meta' key.
           winston.format.metadata({ key: 'meta' }),
           // Condense all metadata.
-          winston.format(({ meta, ...info }) => ({
+          winston.format(({ meta: { stack, ...rest }, ...info }) => ({
             ...info,
-            meta: condense(meta),
+            meta: { stack: stack as unknown, ...(condense(rest) as object) },
           }))(),
           // Format JSON for console.
           winston.format.json(),
@@ -93,8 +93,6 @@ export const getLogger = (
 
             return x;
           })(),
-          // Format error objects.
-          winston.format.errors({ stack: true }),
           // Format JSON for console.
           winston.format.json(),
         ),

@@ -45,6 +45,13 @@ describe('getLogger', function () {
     expect(true).to.be.true;
   });
 
+  it('should error log', function () {
+    const logger = getLogger('debug');
+
+    logger.error('foo', new Error('bar'));
+    expect(true).to.be.true;
+  });
+
   it('should audit log', function () {
     //@ts-expect-error cheap imination of APIGatewayProxyEvent
     const logger = getLogger('debug', { headers: { method: 'get' } });

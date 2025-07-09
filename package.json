@@ -4,6 +4,7 @@
     "url": "https://github.com/veterancrowd/aws-logger/issues"
   },
   "dependencies": {
+    "@karmaniverous/controlled-proxy": "^0.1.3",
     "is-what": "^5.0.2",
     "radash": "^12.1.0",
     "winston": "^3.13.1"

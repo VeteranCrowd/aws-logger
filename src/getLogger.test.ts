@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { getLogger } from './getLogger';
+import { controlProp, getLogger } from './';
 
 const value = {
   a: 1,
@@ -57,6 +57,21 @@ describe('getLogger', function () {
     const logger = getLogger('debug', { headers: { method: 'get' } });
 
     logger.audit('foo', { value }, { test: 42 });
+    expect(true).to.be.true;
+  });
+
+  it('should allow proxy control', function () {
+    //@ts-expect-error cheap imination of APIGatewayProxyEvent
+    const logger = getLogger('debug', { headers: { method: 'get' } });
+
+    logger.debug('logging on');
+
+    logger[controlProp].debug = false;
+    logger.debug('logging off');
+
+    logger[controlProp].debug = true;
+    logger.debug('logging on again');
+
     expect(true).to.be.true;
   });
 });

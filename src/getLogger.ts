@@ -1,3 +1,4 @@
+import { controlledProxy } from '@karmaniverous/controlled-proxy';
 import { type APIGatewayProxyEvent, type Context } from 'aws-lambda';
 import { omit } from 'radash';
 import winston from 'winston';
@@ -29,6 +30,7 @@ export interface Logger extends winston.Logger {
   info: winston.LeveledLogMethod;
   debug: winston.LeveledLogMethod;
   trace: winston.LeveledLogMethod;
+  [x: string | number | symbol]: unknown;
 }
 
 // Create a custom filter format to ignore a specific log level.
@@ -46,8 +48,8 @@ export const getLogger = (
   level = process.env.LOG_LEVEL ?? 'info',
   event?: Event,
   context?: Context,
-) =>
-  winston.createLogger({
+) => {
+  const logger = winston.createLogger({
     level,
     levels,
     transports: [
@@ -100,5 +102,8 @@ export const getLogger = (
       }),
     ],
   }) as Logger;
+
+  return controlledProxy({ target: logger });
+};
 
 export const logger = getLogger();

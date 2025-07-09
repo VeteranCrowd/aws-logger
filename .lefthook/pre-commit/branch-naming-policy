@@ -2,7 +2,7 @@
 #!/bin/sh
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
-REGEX="^(head|dev|(bugfix|chore|docs|feature|hotfix)\/[-_a-zA-Z0-9]+|release\/[0-9]+\.[0-9]+\.[0-9]+)(-[_a-zA-Z0-9]+)?$"
+REGEX="^(head|dev|(bugfix|chore|docs|feat|hotfix)\/[-_a-zA-Z0-9]+|release\/[0-9]+\.[0-9]+\.[0-9]+)(-[_a-zA-Z0-9]+)?$"
 
 if ! [[ $BRANCH =~ $REGEX ]]; then
   echo "$BRANCH"
@@ -12,7 +12,7 @@ if ! [[ $BRANCH =~ $REGEX ]]; then
   echo "- bugfix/[-_a-zA-Z0-9]+"
   echo "- chore/[-_a-zA-Z0-9]+"
   echo "- docs/[-_a-zA-Z0-9]+"
-  echo "- feature/[-_a-zA-Z0-9]+"
+  echo "- feat/[-_a-zA-Z0-9]+"
   echo "- hotfix/[-_a-zA-Z0-9]+"
   echo "- release/{semantic version}"
   exit 1

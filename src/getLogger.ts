@@ -1,4 +1,3 @@
-import { controlledProxy } from '@karmaniverous/controlled-proxy';
 import { type APIGatewayProxyEvent, type Context } from 'aws-lambda';
 import { omit } from 'radash';
 import winston from 'winston';
@@ -44,6 +43,8 @@ type Event = APIGatewayProxyEvent & {
   rawMultiValueHeaders?: unknown;
 };
 
+type Meta = Record<string, unknown>;
+
 export const getLogger = (
   level = process.env.LOG_LEVEL ?? 'info',
   event?: Event,
@@ -61,10 +62,14 @@ export const getLogger = (
           // Collect all metadata under the 'meta' key.
           winston.format.metadata({ key: 'meta' }),
           // Condense all metadata.
-          winston.format(({ meta: { stack, ...rest }, ...info }) => ({
-            ...info,
-            meta: { stack: stack as unknown, ...(condense(rest) as object) },
-          }))(),
+          winston.format(({ meta, ...info }) => {
+            const { stack, ...rest } = meta as Meta;
+
+            return {
+              ...info,
+              meta: { stack, ...(condense(rest) as object) },
+            };
+          })(),
           // Format JSON for console.
           winston.format.json(),
         ),
@@ -79,7 +84,7 @@ export const getLogger = (
             const x = {
               ...info,
               meta: condense({
-                ...meta,
+                ...(meta as Meta),
                 ...(event
                   ? {
                       event: omit(event, [
@@ -103,7 +108,7 @@ export const getLogger = (
     ],
   }) as Logger;
 
-  return controlledProxy({ target: logger });
+  return logger;
 };
 
 export const logger = getLogger();
